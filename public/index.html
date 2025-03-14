@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puppeteer Service Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 100px;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Puppeteer Service Test</h1>
+    
+    <div class="test-section">
+        <h2>Health Check</h2>
+        <button id="health-check-btn">Test Health Endpoint</button>
+        <div id="health-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Screenshot Generation</h2>
+        <form id="screenshot-form">
+            <label for="screenshot-url">URL to Screenshot:</label>
+            <input type="text" id="screenshot-url" name="url" value="https://example.com" required>
+            
+            <label for="screenshot-width">Width:</label>
+            <input type="number" id="screenshot-width" name="width" value="1280" required>
+            
+            <label for="screenshot-height">Height:</label>
+            <input type="number" id="screenshot-height" name="height" value="800" required>
+            
+            <button type="submit">Generate Screenshot</button>
+        </form>
+        <div id="screenshot-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>PDF Generation</h2>
+        <form id="pdf-form">
+            <label for="pdf-url">URL to Convert:</label>
+            <input type="text" id="pdf-url" name="url" value="https://example.com" required>
+            
+            <label for="pdf-width">Width:</label>
+            <input type="number" id="pdf-width" name="width" value="1280" required>
+            
+            <label for="pdf-height">Height:</label>
+            <input type="number" id="pdf-height" name="height" value="800" required>
+            
+            <button type="submit">Generate PDF</button>
+        </form>
+        <div id="pdf-result" class="result"></div>
+    </div>
+    
+    <script>
+        // Base URL of the Puppeteer service
+        const PUPPETEER_SERVICE_URL = 'https://next-dev.kelleher-international.com/puppeteer';
+        
+        // Health check
+        document.getElementById('health-check-btn').addEventListener('click', async () => {
+            const resultElement = document.getElementById('health-result');
+            resultElement.innerHTML = 'Checking health...';
+            
+            try {
+                const response = await fetch(`${PUPPETEER_SERVICE_URL}/health`);
+                const data = await response.json();
+                resultElement.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                resultElement.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        });
+        
+        // Screenshot generation
+        document.getElementById('screenshot-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const url = document.getElementById('screenshot-url').value;
+            const width = parseInt(document.getElementById('screenshot-width').value);
+            const height = parseInt(document.getElementById('screenshot-height').value);
+            
+            const resultElement = document.getElementById('screenshot-result');
+            resultElement.innerHTML = 'Generating screenshot...';
+            
+            try {
+                const response = await fetch(`${PUPPETEER_SERVICE_URL}/screenshots`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        urls: [url],
+                        dimensions: {
+                            width,
+                            height
+                        },
+                        format: 'jpeg'
+                    })
+                });
+                
+                const data = await response.json();
+                resultElement.innerHTML = `
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    <p>Screenshot(s) generated successfully! Path(s): ${data.imagePaths.join(', ')}</p>
+                `;
+            } catch (error) {
+                resultElement.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        });
+        
+        // PDF generation
+        document.getElementById('pdf-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const url = document.getElementById('pdf-url').value;
+            const width = parseInt(document.getElementById('pdf-width').value);
+            const height = parseInt(document.getElementById('pdf-height').value);
+            
+            const resultElement = document.getElementById('pdf-result');
+            resultElement.innerHTML = 'Generating PDF...';
+            
+            try {
+                const response = await fetch(`${PUPPETEER_SERVICE_URL}/export-slides`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        urls: [url],
+                        dimensions: {
+                            width,
+                            height
+                        },
+                        format: 'jpeg'
+                    })
+                });
+                
+                // Check if the response is a PDF
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/pdf')) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    resultElement.innerHTML = `
+                        <p>PDF generated successfully!</p>
+                        <p><a href="${url}" target="_blank" download="exported-pdf.pdf">Download PDF</a></p>
+                        <iframe src="${url}" width="100%" height="500px"></iframe>
+                    `;
+                } else {
+                    const data = await response.json();
+                    resultElement.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                resultElement.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        });
+    </script>
+</body>
+</html> 

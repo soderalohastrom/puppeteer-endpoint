@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PDF Viewer</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+    
+    h1 {
+      margin-bottom: 20px;
+    }
+    
+    iframe {
+      width: 100%;
+      height: 800px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>PDF Viewer</h1>
+  <iframe id="pdfFrame" src="/output/"></iframe>
+  
+  <script>
+    // Update the iframe to show the direct_test.pdf
+    const pdfFrame = document.getElementById('pdfFrame');
+    window.onload = function() {
+      // Use the current timestamp to bust cache
+      const timestamp = new Date().getTime();
+      fetch(`/get-latest-pdf?t=${timestamp}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.latestPdf) {
+            pdfFrame.src = data.latestPdf;
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching latest PDF:', error);
+        });
+    };
+  </script>
+</body>
+</html> 

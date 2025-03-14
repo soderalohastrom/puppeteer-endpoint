@@ -1,0 +1,88 @@
+
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Test Slide 2</title>
+        <style>
+          body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #48dbfb;
+            color: white;
+            font-family: Arial, sans-serif;
+          }
+          .slide {
+            width: 768px;
+            height: 1024px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+          }
+          h1 {
+            font-size: 60px;
+            margin-bottom: 30px;
+          }
+          p {
+            font-size: 30px;
+            max-width: 80%;
+            line-height: 1.4;
+          }
+          .slide-number {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            font-size: 24px;
+            opacity: 0.8;
+          }
+          .image-container {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .image-container img {
+            max-width: 200px;
+            border: 2px solid white;
+            border-radius: 5px;
+            margin-bottom: 10px;
+          }
+          .bg-image-test {
+            width: 200px;
+            height: 100px;
+            margin-top: 15px;
+            background-image: url('https://picsum.photos/seed/11/200/100');
+            background-size: cover;
+            background-position: center;
+            border: 2px solid white;
+            border-radius: 5px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="slide">
+          <h1>Second Slide</h1>
+          <p>This is a test slide for the Puppeteer service. This slide demonstrates the appearance and layout of a slide with the dimensions 768×1024 pixels (3:4 aspect ratio).</p>
+          
+          <div class="image-container">
+            <img src="https://picsum.photos/seed/2/200/300" alt="Test image" />
+            <span>Regular IMG tag (200×300)</span>
+            
+            <div class="bg-image-test"></div>
+            <span>CSS Background Image (200×100)</span>
+          </div>
+          
+          <div class="slide-number">Slide 2/4</div>
+        </div>
+      </body>
+      </html>
+    
