@@ -7,8 +7,8 @@ const axios = require('axios');
 
 // Create a simple Express app to serve test slide pages
 const app = express();
-const PORT = 3002;
-const PUPPETEER_SERVICE_URL = 'http://localhost:3001';
+const PORT = 3006;
+const PUPPETEER_SERVICE_URL = 'http://localhost:3500';
 
 // Create directory for test files
 const testDir = path.join(__dirname, 'test-slides');
@@ -42,8 +42,8 @@ const generateTestSlides = () => {
             font-family: Arial, sans-serif;
           }
           .slide {
-            width: 768px;
-            height: 1024px;
+            width: 1920px;
+            height: 1080px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -75,16 +75,16 @@ const generateTestSlides = () => {
             align-items: center;
           }
           .image-container img {
-            max-width: 200px;
+            max-width: 400px;
             border: 2px solid white;
             border-radius: 5px;
             margin-bottom: 10px;
           }
           .bg-image-test {
-            width: 200px;
-            height: 100px;
+            width: 400px;
+            height: 200px;
             margin-top: 15px;
-            background-image: url('https://picsum.photos/seed/${i+10}/200/100');
+            background-image: url('https://picsum.photos/seed/${i+10}/400/200');
             background-size: cover;
             background-position: center;
             border: 2px solid white;
@@ -95,14 +95,14 @@ const generateTestSlides = () => {
       <body>
         <div class="slide">
           <h1>${titles[i]}</h1>
-          <p>This is a test slide for the Puppeteer service. This slide demonstrates the appearance and layout of a slide with the dimensions 768×1024 pixels (3:4 aspect ratio).</p>
+          <p>This is a test slide for the Puppeteer service. This slide demonstrates the appearance and layout of a slide with high-resolution images for PDF export.</p>
           
           <div class="image-container">
-            <img src="https://picsum.photos/seed/${i+1}/200/300" alt="Test image" />
-            <span>Regular IMG tag (200×300)</span>
+            <img src="https://picsum.photos/seed/${i+1}/400/600" alt="Test image" />
+            <span>Regular IMG tag (400×600)</span>
             
             <div class="bg-image-test"></div>
-            <span>CSS Background Image (200×100)</span>
+            <span>CSS Background Image (400×200)</span>
           </div>
           
           <div class="slide-number">Slide ${i+1}/4</div>
@@ -111,9 +111,12 @@ const generateTestSlides = () => {
       </html>
     `;
     
-    const filePath = path.join(testDir, `slide-${i+1}.html`);
-    fs.writeFileSync(filePath, html);
-    console.log(`Created test slide: ${filePath}`);
+    // Save with both naming conventions to support all tests
+    const filePathWithHyphen = path.join(testDir, `slide-${i+1}.html`);
+    const filePathWithoutHyphen = path.join(testDir, `slide${i+1}.html`);
+    fs.writeFileSync(filePathWithHyphen, html);
+    fs.writeFileSync(filePathWithoutHyphen, html);
+    console.log(`Created test slides: ${filePathWithHyphen} and ${filePathWithoutHyphen}`);
   }
 };
 
@@ -135,10 +138,10 @@ const testScreenshots = async () => {
   console.log('\n--- Testing Screenshots Endpoint ---');
   
   const slideUrls = [
-    `http://localhost:${PORT}/slides/slide-1.html`,
-    `http://localhost:${PORT}/slides/slide-2.html`,
-    `http://localhost:${PORT}/slides/slide-3.html`,
-    `http://localhost:${PORT}/slides/slide-4.html`
+    `http://localhost:3002/slide/1`,
+    `http://localhost:3002/slide/2`,
+    `http://localhost:3002/slide/3`,
+    `http://localhost:3002/slide/4`
   ];
   
   try {
@@ -230,10 +233,10 @@ const testExportSlides = async () => {
   console.log('\n--- Testing Export Slides Endpoint (Combined) ---');
   
   const slideUrls = [
-    `http://localhost:${PORT}/slides/slide-1.html`,
-    `http://localhost:${PORT}/slides/slide-2.html`,
-    `http://localhost:${PORT}/slides/slide-3.html`,
-    `http://localhost:${PORT}/slides/slide-4.html`
+    `http://localhost:3002/slide/1`,
+    `http://localhost:3002/slide/2`,
+    `http://localhost:3002/slide/3`,
+    `http://localhost:3002/slide/4`
   ];
   
   try {
@@ -336,4 +339,4 @@ const runTests = async () => {
 };
 
 // Run the tests
-runTests(); 
+runTests();

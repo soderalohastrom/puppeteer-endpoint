@@ -1,0 +1,185 @@
+{
+  "info": {
+    "name": "Puppeteer PDF Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "API collection for the standalone Puppeteer service running on port 3500"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3500/health",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3500",
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Check if the Puppeteer service is running"
+      },
+      "response": []
+    },
+    {
+      "name": "Root Endpoint",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3500/",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3500",
+          "path": [
+            ""
+          ]
+        },
+        "description": "Root endpoint for basic testing"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Latest PDF",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3500/get-latest-pdf",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3500",
+          "path": [
+            "get-latest-pdf"
+          ]
+        },
+        "description": "Get the URL of the most recently generated PDF"
+      },
+      "response": []
+    },
+    {
+      "name": "Screenshot from HTML",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"html\": \"<!DOCTYPE html><html><head><title>Test</title></head><body><h1>Test Screenshot</h1><p>This is a test screenshot from HTML content.</p></body></html>\",\n    \"options\": {\n        \"width\": 1024,\n        \"height\": 768,\n        \"scale\": 2,\n        \"fullPage\": false\n    }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3500/screenshot",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3500",
+          "path": [
+            "screenshot"
+          ]
+        },
+        "description": "Generate a screenshot from raw HTML content"
+      },
+      "response": []
+    },
+    {
+      "name": "Screenshots from URLs",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"urls\": [\n        \"http://localhost:3002/slide/1\",\n        \"http://localhost:3002/slide/2\"\n    ],\n    \"dimensions\": {\n        \"width\": 1920,\n        \"height\": 1080\n    },\n    \"format\": \"jpeg\",\n    \"quality\": 90\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3500/screenshots",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3500",
+          "path": [
+            "screenshots"
+          ]
+        },
+        "description": "Generate screenshots from multiple URLs"
+      },
+      "response": []
+    },
+    {
+      "name": "Generate PDF from Images",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"imagePaths\": [\n        \"/home/ubuntu/puppeteer-service/output/slide-1-example.jpg\",\n        \"/home/ubuntu/puppeteer-service/output/slide-2-example.jpg\"\n    ],\n    \"dimensions\": {\n        \"width\": 1920,\n        \"height\": 1080\n    }\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3500/generate-pdf",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3500",
+          "path": [
+            "generate-pdf"
+          ]
+        },
+        "description": "Generate a PDF from a list of image paths"
+      },
+      "response": []
+    },
+    {
+      "name": "Export Slides to PDF",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"urls\": [\n        \"http://localhost:3002/slide/1\",\n        \"http://localhost:3002/slide/2\",\n        \"http://localhost:3002/slide/3\",\n        \"http://localhost:3002/slide/4\"\n    ],\n    \"dimensions\": {\n        \"width\": 1920,\n        \"height\": 1080\n    },\n    \"quality\": 100\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3500/export-slides",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3500",
+          "path": [
+            "export-slides"
+          ]
+        },
+        "description": "Generate a PDF from slide URLs (one-step process)"
+      },
+      "response": []
+    }
+  ]
+} 

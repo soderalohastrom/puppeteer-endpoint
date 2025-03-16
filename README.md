@@ -1,56 +1,34 @@
-# Puppeteer Endpoint Service
+# Puppeteer PDF Service
 
-A microservice for generating screenshots and PDFs from web pages using Puppeteer. This service is designed to work with slide presentation applications to facilitate exporting slide decks as PDFs.
+A standalone microservice for generating screenshots and PDFs using Puppeteer. This service provides API endpoints for creating screenshots from HTML content or URLs, and generating PDFs from those screenshots.
 
-## Features
+## Service Overview
 
-- Convert web pages (slides) to high-quality screenshots
-- Generate PDFs from screenshots with precise dimensions
-- Support for 768×1024 pixel slides (3:4 aspect ratio)
-- Handle CSS background images with improved wait strategies
-- High-resolution output with deviceScaleFactor: 2
-- Customizable dimensions and quality settings
+- **Production URL**: https://next-dev.kelleher-international.com/puppeteer
+- **Local Development URL**: http://localhost:3500
+- **Test Server URL**: http://localhost:3002 (for sample slides)
 
-## Installation
+## Endpoints and Status
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/puppeteer-endpoint.git
-cd puppeteer-endpoint
+| Method | Endpoint | Description | Status |
+|--------|----------|-------------|--------|
+| GET | `/health` | Health check endpoint | ✅ WORKS |
+| GET | `/` | Root endpoint | ✅ WORKS |
+| GET | `/get-latest-pdf` | Get the URL of the most recently generated PDF | ✅ WORKS |
+| POST | `/screenshot` | Generate a screenshot from HTML content | ✅ WORKS |
+| POST | `/screenshots` | Generate screenshots from multiple URLs | ✅ WORKS |
+| POST | `/generate-pdf` | Generate a PDF from images | ✅ WORKS |
+| POST | `/export-slides` | Generate a PDF from slide URLs (one-step process) | ✅ WORKS |
 
-# Install dependencies
-npm install
-```
+## Usage Examples
 
-## Prerequisites
-
-For Linux environments (e.g., Ubuntu), you'll need to install the following dependencies:
+### Health Check
 
 ```bash
-sudo apt-get update
-sudo apt-get install -y gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget
+curl https://next-dev.kelleher-international.com/puppeteer/health
 ```
 
-## Usage
-
-### Starting the service
-
-```bash
-# Start the service
-npm start
-
-# The service will be available at http://localhost:3500
-```
-
-### API Endpoints
-
-#### 1. Health Check
-
-```
-GET /health
-```
-
-**Response:**
+Response:
 ```json
 {
   "status": "ok",
@@ -58,194 +36,177 @@ GET /health
 }
 ```
 
-#### 2. Screenshots Endpoint
+### Screenshot from HTML
 
-```
-POST /screenshots
-```
-
-**Required Parameters:**
-```json
-{
-  "urls": ["http://example.com/slide1", "http://example.com/slide2", ...]
-}
-```
-
-**Optional Parameters:**
-```json
-{
-  "dimensions": {
-    "width": 768, 
-    "height": 1024
-  },
-  "format": "jpeg", // Default is "jpeg". Can use "png" for lossless compression
-  "quality": 85     // Default is 85. Range: 0-100, higher means better quality but larger files
-}
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "html": "<!DOCTYPE html><html><head><title>Test</title></head><body><h1>Test Screenshot</h1><p>This is a test screenshot from HTML content.</p></body></html>",
+    "options": {
+      "width": 1024,
+      "height": 768,
+      "scale": 2,
+      "fullPage": false
+    }
+  }' \
+  https://next-dev.kelleher-international.com/puppeteer/screenshot
 ```
 
-**Response:**
-```json
-{
-  "imagePaths": [
-    "/path/to/slide-1-uuid.jpg",
-    "/path/to/slide-2-uuid.jpg",
-    ...
-  ],
-  "message": "Successfully captured X screenshots"
-}
+### Screenshots from URLs
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "urls": [
+      "https://example.com",
+      "https://google.com"
+    ],
+    "dimensions": {
+      "width": 1920,
+      "height": 1080
+    },
+    "format": "jpeg",
+    "quality": 90
+  }' \
+  https://next-dev.kelleher-international.com/puppeteer/screenshots
 ```
 
-#### 3. PDF Generation Endpoint
+### Export Slides to PDF
 
-```
-POST /generate-pdf
-```
-
-**Required Parameters:**
-```json
-{
-  "imagePaths": [
-    "/path/to/slide-1-uuid.jpg",
-    "/path/to/slide-2-uuid.jpg",
-    ...
-  ]
-}
-```
-
-**Optional Parameters:**
-```json
-{
-  "dimensions": {
-    "width": 768,
-    "height": 1024
-  }
-}
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/pdf" \
+  -d '{
+    "urls": [
+      "https://next-dev.kelleher-international.com/slide/1",
+      "https://next-dev.kelleher-international.com/slide/2",
+      "https://next-dev.kelleher-international.com/slide/3",
+      "https://next-dev.kelleher-international.com/slide/4"
+    ],
+    "dimensions": {
+      "width": 1920,
+      "height": 1080
+    },
+    "quality": 100
+  }' \
+  --output slides.pdf \
+  https://next-dev.kelleher-international.com/puppeteer/export-slides
 ```
 
-**Response:**
-Binary PDF data with content-type `application/pdf`
+## Usage Notes and Best Practices
 
-**Important Note:** The `imagePaths` must be valid server-side paths from a previous call to the `/screenshots` endpoint.
+### 1. Generate PDF from Images Endpoint
 
-#### 4. Combined Export Endpoint (Recommended)
+The `/generate-pdf` endpoint requires server-side paths to images that already exist on the server:
 
-```
-POST /export-slides
-```
-
-**Required Parameters:**
-```json
-{
-  "urls": ["http://example.com/slide1", "http://example.com/slide2", ...]
-}
-```
-
-**Optional Parameters:**
-```json
-{
-  "dimensions": {
-    "width": 768,
-    "height": 1024
-  },
-  "format": "jpeg", // Default is "jpeg"
-  "quality": 85     // Default is 85
-}
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "imagePaths": [
+      "/home/ubuntu/puppeteer-service/output/slide-1-8355b6da-fe5e-4e59-9e90-6ccf4bb53e7b.jpg",
+      "/home/ubuntu/puppeteer-service/output/slide-2-8e191299-49ac-4676-90c7-868f89ee7451.jpg"
+    ],
+    "dimensions": {
+      "width": 1920,
+      "height": 1080
+    }
+  }' \
+  --output document.pdf \
+  https://next-dev.kelleher-international.com/puppeteer/generate-pdf
 ```
 
-**Response:**
-Binary PDF data with content-type `application/pdf`
+⚠️ **Important**: This endpoint requires absolute file paths to images on the server. It's primarily intended for server-side workflows where images have already been generated by the `/screenshots` endpoint. For a more convenient solution that works with publicly accessible URLs, use the `/export-slides` endpoint.
+
+### 2. Export Slides to PDF Endpoint
+
+For the `/export-slides` endpoint, ensure you're using the correct URLs for the slides:
+
+```bash
+# For local testing with test-server.js
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/pdf" \
+  -d '{
+    "urls": [
+      "http://localhost:3002/slide/1",
+      "http://localhost:3002/slide/2",
+      "http://localhost:3002/slide/3",
+      "http://localhost:3002/slide/4"
+    ],
+    "dimensions": {
+      "width": 1920,
+      "height": 1080
+    },
+    "quality": 100
+  }' \
+  --output slides.pdf \
+  http://localhost:3500/export-slides
+```
+
+For the production API, these should be exposed through Nginx at:
+
+```
+https://next-dev.kelleher-international.com/slide/1
+https://next-dev.kelleher-international.com/slide/2
+https://next-dev.kelleher-international.com/slide/3
+https://next-dev.kelleher-international.com/slide/4
+```
+
+## Service Configuration
+
+The service runs on port 3500 and is configured via environment variables:
+
+- `PORT`: Port to run the service on (default: 3500)
+- `NODE_ENV`: Environment setting (development/production)
 
 ## Testing
 
-You can test the service using the included test scripts:
+### Local Testing
 
-```bash
-# Run the test server and generate test slides
-node test-slides.js
-```
-
-This will:
-1. Create sample HTML slide files
-2. Start a local server on port 3002 to serve these files
-3. Use the Puppeteer service to generate screenshots and PDFs
-4. Save test output in the local directory
-
-## Integration Example
-
-Here's a simple example of using the service from a React application:
-
-```javascript
-const exportToPDF = async () => {
-  try {
-    // 1. Get the URLs of your slides
-    const slideUrls = [
-      "http://localhost:3000/slides/1/render",
-      "http://localhost:3000/slides/2/render",
-      "http://localhost:3000/slides/3/render",
-      "http://localhost:3000/slides/4/render"
-    ];
-    
-    // 2. Call the export-slides endpoint
-    const response = await axios.post(
-      "http://localhost:3500/export-slides",
-      {
-        urls: slideUrls,
-        dimensions: {
-          width: 768, 
-          height: 1024
-        },
-        quality: 90 // Optional: increase quality
-      },
-      {
-        responseType: 'blob' // Important for binary data
-      }
-    );
-    
-    // 3. Create download for the user
-    const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
-    const downloadUrl = URL.createObjectURL(pdfBlob);
-    
-    const downloadLink = document.createElement('a');
-    downloadLink.href = downloadUrl;
-    downloadLink.download = 'presentation.pdf';
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-    
-    // Clean up
-    URL.revokeObjectURL(downloadUrl);
-  } catch (error) {
-    console.error("Error exporting PDF:", error);
-  }
-};
-```
-
-## Production Deployment
-
-For production deployment, we recommend:
-
-1. **Using PM2 to manage the Node.js process:**
+1. Start the service:
    ```bash
-   npm install -g pm2
-   pm2 start index.js --name "puppeteer-endpoint"
+   node index.js
    ```
 
-2. **Setting up a reverse proxy with Nginx:**
-   See the included `nginx-config-ubuntu.conf` file for an example configuration.
+2. Start the test server (provides sample slides):
+   ```bash
+   node test-server.js
+   ```
 
-3. **Environment Variables:**
-   - `PORT`: The port on which the service will run (default: 3500)
+3. Use the provided Postman collection (`Puppeteer-Service-Postman.json`) for testing endpoints.
 
-## Troubleshooting
+### Production Testing
 
-If background images aren't appearing in PDFs:
+Import the Postman collection and update the host to:
+`https://next-dev.kelleher-international.com/puppeteer`
 
-1. Ensure images are fully loaded on the source page before calling the API
-2. Use absolute URLs for CSS background images
-3. Check network requests in the browser console for any failed image loads
-4. Consider adding custom image loading detection in your slides
+## Future Improvements
 
-For more detailed troubleshooting information, see the `make_pdf_from_slides_howto.md` file.
+1. Add an endpoint to generate PDFs from publicly accessible image URLs
+2. Improve error handling and validation
+3. Add rate limiting for production use
+4. Add authentication for sensitive endpoints
+5. Update Nginx configuration to properly expose test slides at `/slide/{number}`
+6. Consider adding a simple UI for testing and demonstration
+
+## Deployment
+
+The service is deployed using PM2:
+
+```bash
+pm2 start index.js --name puppeteer-service
+pm2 save
+```
+
+To check the status:
+```bash
+pm2 list
+pm2 logs puppeteer-service
+```
 
 ## License
 

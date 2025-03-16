@@ -2,7 +2,7 @@
 
 ## Overview ✅
 
-This document provides the complete implementation for a slide presentation PDF generator using Puppeteer for high-quality screenshots and PDF generation. The system captures 4 slides at 768×1024 pixel dimensions (3:4 aspect ratio) and stitches them together into a professional PDF document ready for download.
+This document provides the complete implementation for a slide presentation PDF generator using Puppeteer for high-quality screenshots and PDF generation. The system captures slides at your specified dimensions and stitches them together into a professional PDF document ready for download.
 
 ## Architecture ✅
 
@@ -17,7 +17,7 @@ The system consists of three primary components:
 1. User edits and positions slide presentation in your Vite/React app
 2. User clicks the "Export" button
 3. React component makes API call to your Next.js backend
-4. Next.js backend calls the Puppeteer microservice to capture 4 screenshots
+4. Next.js backend calls the Puppeteer microservice to capture screenshots
 5. Puppeteer navigates to each slide URL and takes high-resolution screenshots
 6. Screenshots are sent back to the Next.js API
 7. Next.js generates a PDF from the screenshots
@@ -35,9 +35,10 @@ React component code is available and can be integrated with your main applicati
 ### 2. Puppeteer Microservice ✅
 
 The Puppeteer microservice has been implemented and tested successfully. This service:
-- Takes screenshots of slides at 768×1024 pixels (3:4 aspect ratio)
+- Takes screenshots of slides at your specified dimensions
 - Generates PDFs from those screenshots
 - Provides both individual endpoints and a combined export endpoint
+- Supports fully customizable dimensions via API parameters
 
 Key implementation details:
 - Using `deviceScaleFactor: 2` for high-resolution images
@@ -45,11 +46,12 @@ Key implementation details:
 - Increased delay times for better rendering (2000ms + 1000ms additional)
 - Sequential processing of slides for stability
 - Proper error handling and cleanup
+- Flexible dimensions to match your application needs
 
 ### 3. PDF Generation ✅
 
 The PDF generation service has been integrated directly into the Puppeteer microservice using pdf-lib. This:
-- Creates a PDF with the correct dimensions
+- Creates a PDF with your specified dimensions
 - Embeds the screenshots as pages
 - Provides a downloadable PDF file
 
@@ -63,6 +65,7 @@ We identified and fixed an issue where background images weren't appearing in th
 2. **Explicit Image Loading**: Added code to wait for all `<img>` elements to complete loading
 3. **CSS Background Image Detection**: Added detection for elements with CSS background images
 4. **Additional Render Time**: Added a 1000ms pause after images load to ensure complete rendering
+5. **Flexible Dimensions**: Added support for custom dimensions in all API calls
 
 The updated Puppeteer code now ensures that all visual elements, including background images, properly render before screenshots are taken:
 
@@ -145,7 +148,7 @@ To ensure background images appear in your PDFs, follow these steps:
 ### 1. Health Check Endpoint
 
 ```
-GET http://localhost:3001/health
+GET http://localhost:3500/health
 ```
 
 **Response:**
@@ -159,7 +162,7 @@ GET http://localhost:3001/health
 ### 2. Screenshots Endpoint
 
 ```
-POST http://localhost:3001/screenshots
+POST http://localhost:3500/screenshots
 ```
 
 **Required Parameters:**
@@ -173,13 +176,21 @@ POST http://localhost:3001/screenshots
 ```json
 {
   "dimensions": {
-    "width": 768, 
-    "height": 1024
+    "width": 800, 
+    "height": 600
   },
   "format": "jpeg", // Default is "jpeg". Can use "png" for lossless compression
   "quality": 85     // Default is 85. Range: 0-100, higher means better quality but larger files
 }
 ```
+
+**Notes on Dimensions:**
+- The dimensions are fully customizable to match your application needs
+- Common presets: 
+  - 800×600 (4:3 aspect ratio) - Standard presentation
+  - 1920×1080 (16:9 aspect ratio) - Widescreen presentation
+  - 768×1024 (3:4 aspect ratio) - Portrait orientation
+  - Custom dimensions - Any width and height you require
 
 **Response:**
 ```json
@@ -196,7 +207,7 @@ POST http://localhost:3001/screenshots
 ### 3. PDF Generation Endpoint
 
 ```
-POST http://localhost:3001/generate-pdf
+POST http://localhost:3500/generate-pdf
 ```
 
 **Required Parameters:**
@@ -204,9 +215,12 @@ POST http://localhost:3001/generate-pdf
 {
   "imagePaths": [
     "/path/to/slide-1-uuid.jpg",
-    "/path/to/slide-2-uuid.jpg",
-    ...
-  ]
+    "/path/to/slide-2-uuid.jpg"
+  ],
+  "dimensions": {
+    "width": 768,
+    "height": 1024
+  }
 }
 ```
 
@@ -214,8 +228,8 @@ POST http://localhost:3001/generate-pdf
 ```json
 {
   "dimensions": {
-    "width": 768,
-    "height": 1024
+    "width": 800,
+    "height": 600
   }
 }
 ```
@@ -228,30 +242,74 @@ Binary PDF data with content-type `application/pdf`
 ### 4. Combined Export Endpoint (Recommended)
 
 ```
-POST http://localhost:3001/export-slides
+POST http://localhost:3500/export-slides
 ```
 
 **Required Parameters:**
 ```json
 {
-  "urls": ["http://example.com/slide1", "http://example.com/slide2", ...]
+  "urls": ["http://example.com/slide1", "http://example.com/slide2", ...],
+  "dimensions": {
+    "width": 768,
+    "height": 1024
+  },
+  "format": "jpeg",
+  "quality": 85
+}
+```
+
+**Response:**
+Binary PDF data with content-type `application/pdf`
+
+### 5. Get Latest PDF Endpoint
+
+```
+GET http://localhost:3500/get-latest-pdf
+```
+
+**Response:**
+```json
+{
+  "latestPdf": "/output/presentation-uuid.pdf"
+}
+```
+
+This endpoint returns the path to the most recently generated PDF, which can be useful for retrieving PDFs after they've been generated.
+
+### 6. Screenshot from HTML Endpoint
+
+```
+POST http://localhost:3500/screenshot
+```
+
+**Required Parameters:**
+```json
+{
+  "html": "<html>...</html>"
 }
 ```
 
 **Optional Parameters:**
 ```json
 {
-  "dimensions": {
+  "options": {
     "width": 768,
-    "height": 1024
-  },
-  "format": "jpeg", // Default is "jpeg"
-  "quality": 85     // Default is 85
+    "height": 1024,
+    "scale": 2,
+    "fullPage": false
+  }
 }
 ```
 
 **Response:**
-Binary PDF data with content-type `application/pdf`
+```json
+{
+  "success": true,
+  "url": "/output/screenshot-uuid.png"
+}
+```
+
+This endpoint allows you to generate a screenshot from raw HTML content rather than from a URL.
 
 ## Integration Examples
 
@@ -273,12 +331,12 @@ const exportToPDF = async () => {
     
     // 2. Call the export-slides endpoint
     const response = await axios.post(
-      "http://localhost:3001/export-slides",
+      "http://localhost:3500/export-slides",
       {
         urls: slideUrls,
         dimensions: {
-          width: 768, 
-          height: 1024
+          width: 800, 
+          height: 600
         },
         quality: 90 // Optional: increase quality
       },
@@ -325,12 +383,12 @@ const exportWithProgress = async () => {
     setProgress(20); // Update UI
     
     const screenshotResponse = await axios.post(
-      "http://localhost:3001/screenshots",
+      "http://localhost:3500/screenshots",
       {
         urls: slideUrls,
         dimensions: {
-          width: 768,
-          height: 1024
+          width: 800,
+          height: 600
         }
       }
     );
@@ -340,12 +398,12 @@ const exportWithProgress = async () => {
     
     // 4. Second call: Generate PDF
     const pdfResponse = await axios.post(
-      "http://localhost:3001/generate-pdf",
+      "http://localhost:3500/generate-pdf",
       {
         imagePaths: screenshotResponse.data.imagePaths,
         dimensions: {
-          width: 768,
-          height: 1024
+          width: 800,
+          height: 600
         }
       },
       {
@@ -371,7 +429,7 @@ const exportWithProgress = async () => {
 The most important part of the API is the `urls` array. These URLs must:
 
 1. Be accessible from the server where the Puppeteer service is running
-2. Render each slide in isolation with the correct dimensions (768×1024 pixels)
+2. Render each slide in isolation with the dimensions matching your API request
 3. Be fully rendered with all assets (images, fonts, etc.) loaded
 
 For your integration, you'll likely want to create a special "render mode" for your slides that:
@@ -394,6 +452,12 @@ For your integration, you'll likely want to create a special "render mode" for y
 
 1. **For the Puppeteer microservice**:
    ```bash
+   # Option 1: Clone from GitHub
+   git clone https://github.com/soderalohastrom/puppeteer-endpoint.git
+   cd puppeteer-endpoint
+   npm install
+   
+   # Option 2: Manual setup
    mkdir -p puppeteer-service/output
    cd puppeteer-service
    npm init -y
@@ -402,7 +466,7 @@ For your integration, you'll likely want to create a special "render mode" for y
 
 2. **Add environment variables to your Next.js app**:
    ```
-   PUPPETEER_SERVICE_URL=http://localhost:3001
+   PUPPETEER_SERVICE_URL=http://localhost:3500
    APP_URL=http://localhost:3000  # Replace with your app's base URL
    ```
 
@@ -416,8 +480,93 @@ For your integration, you'll likely want to create a special "render mode" for y
 2. **For production use**:
    ```bash
    npm install -g pm2
-   pm2 start index.js --name puppeteer-service
+   pm2 start index.js --name puppeteer-endpoint
    ```
+
+## GitHub Repository
+
+The complete code for this microservice is available on GitHub:
+
+```
+https://github.com/soderalohastrom/puppeteer-endpoint
+```
+
+The repository contains:
+- The main service code (index.js)
+- Test scripts for verifying the functionality
+- Example React integration
+- Documentation (this guide)
+- Sample slides for testing
+
+To use the repository:
+
+```bash
+# Clone the repository
+git clone https://github.com/soderalohastrom/puppeteer-endpoint.git
+
+# Navigate to the directory
+cd puppeteer-endpoint
+
+# Install dependencies
+npm install
+
+# Start the service
+node index.js
+```
+
+## cURL Examples
+
+Here are some examples of using the API with cURL for testing:
+
+### 1. Check Health Status
+```bash
+curl http://localhost:3500/health
+```
+
+### 2. Generate PDF from Slides
+```bash
+curl -X POST \
+  http://localhost:3500/export-slides \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "urls": [
+      "http://localhost:3002/slides/slide-1.html",
+      "http://localhost:3002/slides/slide-2.html",
+      "http://localhost:3002/slides/slide-3.html",
+      "http://localhost:3002/slides/slide-4.html"
+    ],
+    "dimensions": {
+      "width": 768,
+      "height": 1024
+    },
+    "quality": 90
+  }' \
+  --output presentation.pdf
+```
+
+### 3. Get Latest PDF
+```bash
+curl http://localhost:3500/get-latest-pdf
+```
+
+### 4. Generate Widescreen Presentation
+```bash
+curl -X POST \
+  http://localhost:3500/export-slides \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "urls": [
+      "http://localhost:3002/slides/slide-1.html",
+      "http://localhost:3002/slides/slide-2.html"
+    ],
+    "dimensions": {
+      "width": 1920,
+      "height": 1080
+    },
+    "quality": 95
+  }' \
+  --output widescreen-presentation.pdf
+```
 
 ## Error Handling and Optimizations
 
@@ -495,6 +644,7 @@ For your integration, you'll likely want to create a special "render mode" for y
             if (bgImage.includes('url(')) {
               const url = bgImage.match(/url\(['"]?(.*?)['"]?\)/)[1];
               const img = new Image();
+              img.onload = () => el.dataset.bgLoaded = 'true';
               img.src = url;
               const promise = new Promise(resolve => {
                 img.onload = resolve;
@@ -619,10 +769,40 @@ For your integration, you'll likely want to create a special "render mode" for y
 We have successfully implemented a complete end-to-end solution for generating PDFs from slide presentations:
 
 1. ✅ **Frontend UI**: A responsive interface allowing users to create and preview slides
-2. ✅ **PDF Export**: Fully functional export to PDF with proper dimensions and layout
+2. ✅ **PDF Export**: Fully functional export to PDF with customizable dimensions
 3. ⚠️ **Background Images**: Improved background image rendering with wait strategies, but still may require testing with your specific images and setup
-4. ✅ **Multiple Presets**: Support for different aspect ratios and dimensions
+4. ✅ **Multiple Presets**: Support for any aspect ratio and dimensions through the API
 5. ✅ **Production Deployment**: Service deployed and accessible through HTTPS
+6. ✅ **GitHub Repository**: Code published and available at https://github.com/soderalohastrom/puppeteer-endpoint
+7. ✅ **Flexible Dimensions**: Complete support for any custom dimensions through simple API parameters
+
+### Testing with Real URLs
+
+When testing with real application URLs (not just the test slides), keep these considerations in mind:
+
+1. **URL Accessibility**: Ensure your slide URLs are publicly accessible from the server where the Puppeteer service is running.
+
+2. **Dimensions**: The HTML content at your URLs should be responsive or match the dimensions you specify in your API call.
+
+3. **Console Logs**: Check the console logs on the Puppeteer service while testing - they'll show if images are being detected and loaded.
+
+4. **Image Loading**: For complex slides with many images, you might need to increase the wait times further.
+
+5. **CORS Issues**: If your application uses resources from different domains, ensure proper CORS headers are set.
+
+6. **Server Location**: For optimal performance, host the Puppeteer service close to where your application is hosted to minimize network latency.
+
+### Common Dimension Presets
+
+While the service supports any dimensions, here are some common presets you might consider:
+
+| Preset | Dimensions | Aspect Ratio | Use Case |
+|--------|------------|--------------|----------|
+| Standard | 800×600 | 4:3 | Traditional presentations |
+| Widescreen | 1920×1080 | 16:9 | Modern presentations, matches most displays |
+| Portrait | 768×1024 | 3:4 | Mobile-friendly, document-like presentations |
+| Square | 1000×1000 | 1:1 | Social media content |
+| Custom | Any | Any | Match your specific application needs |
 
 ### Future Considerations
 
@@ -632,7 +812,8 @@ We have successfully implemented a complete end-to-end solution for generating P
 4. **Error Reporting**: Enhance error reporting with more detailed diagnostics
 5. **Batch Processing**: Add support for larger batch processing of presentations
 6. **Background Image Coordination**: Add a "readiness" signal from the frontend to indicate all images are loaded before taking screenshots
+7. **Authentication**: Implement proper authentication for the service in production environments
 
 ---
 
-This implementation provides a complete solution for generating high-quality PDF presentations from your React-based slide editor. The dimensions of 768×1024 pixels (3:4 aspect ratio) ensure that your slides look professional on all devices while providing ample space for content during the editing process.
+This implementation provides a complete solution for generating high-quality PDF presentations from your React-based slide editor. The service's flexible dimension support allows you to create presentations in any size or aspect ratio you need, ensuring your content looks perfect for any use case.

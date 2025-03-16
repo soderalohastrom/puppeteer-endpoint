@@ -428,8 +428,8 @@ app.post('/export-slides', async (req, res) => {
   }
   
   // Define default values for dimensions
-  const width = dimensions.width || 768;
-  const height = dimensions.height || 1024;
+  const width = dimensions.width || 1920;
+  const height = dimensions.height || 1080;
   
   try {
     console.log(`Processing export request for ${urls.length} slides with dimensions: ${width}x${height} (custom: ${!!dimensions.width})`);

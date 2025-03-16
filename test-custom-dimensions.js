@@ -3,7 +3,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-const PUPPETEER_SERVICE_URL = 'http://localhost:3001';
+const PUPPETEER_SERVICE_URL = 'http://localhost:3500';
 
 async function testCustomDimensions() {
   console.log('=== Testing Custom Dimensions ===');
@@ -12,7 +12,7 @@ async function testCustomDimensions() {
     // Test with default dimensions (should use 768x1024)
     console.log('\n1. Testing default dimensions (should use 768x1024)');
     const defaultResponse = await axios.post(`${PUPPETEER_SERVICE_URL}/export-slides`, {
-      urls: ['http://localhost:3002/slides/slide-1.html']
+      urls: ['http://localhost:3006/slides/slide-1.html']
     }, { responseType: 'arraybuffer' });
     
     fs.writeFileSync(path.join(__dirname, 'test-default.pdf'), Buffer.from(defaultResponse.data));
@@ -21,7 +21,7 @@ async function testCustomDimensions() {
     // Test with custom dimensions
     console.log('\n2. Testing custom dimensions (1000x800)');
     const customResponse = await axios.post(`${PUPPETEER_SERVICE_URL}/export-slides`, {
-      urls: ['http://localhost:3002/slides/slide-1.html'],
+      urls: ['http://localhost:3006/slides/slide-1.html'],
       dimensions: {
         width: 1000,
         height: 800
@@ -34,7 +34,7 @@ async function testCustomDimensions() {
     // Test with only width specified
     console.log('\n3. Testing partial dimensions (width only: 500px)');
     const partialResponse = await axios.post(`${PUPPETEER_SERVICE_URL}/export-slides`, {
-      urls: ['http://localhost:3002/slides/slide-1.html'],
+      urls: ['http://localhost:3006/slides/slide-1.html'],
       dimensions: {
         width: 500
       }
@@ -56,7 +56,7 @@ async function testCustomDimensions() {
 }
 
 // Make sure test-slides server is running first
-axios.get('http://localhost:3002/slides/slide-1.html')
+axios.get('http://localhost:3006/slides/slide-1.html')
   .then(() => {
     console.log('Test slides server is running. Starting tests...');
     testCustomDimensions();
